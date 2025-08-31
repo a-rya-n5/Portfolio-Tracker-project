@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Portfolio Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body class="min-h-screen bg-gray-50">
+    <nav class="bg-white border-b shadow-sm">
+      <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+        <h1 class="text-xl font-bold">Portfolio Dashboard</h1>
+        <div class="flex items-center gap-3">
+          <span id="user-email" class="text-sm text-gray-600"></span>
+          <button id="logout" class="btn-sm">Logout</button>
+        </div>
+      </div>
+    </nav>
+
+    <main class="max-w-6xl mx-auto p-4 space-y-6">
+      <!-- Summary Cards -->
+      <section class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="card"><div class="label">Total Invested</div><div id="total-invested" class="metric">—</div></div>
+        <div class="card"><div class="label">Current Value</div><div id="current-value" class="metric">—</div></div>
+        <div class="card"><div class="label">Net P/L</div><div id="net-pnl" class="metric">—</div></div>
+      </section>
+
+      <!-- Add / Edit Asset -->
+      <section class="bg-white rounded-2xl shadow p-4">
+        <h2 class="text-lg font-semibold mb-3">Add / Edit Asset</h2>
+        <form id="asset-form" class="grid grid-cols-1 md:grid-cols-6 gap-3 items-end">
+          <input type="hidden" id="asset-id" />
+          <div>
+            <label class="label">Symbol</label>
+            <input id="symbol" class="input" placeholder="AAPL, BTC, INFY" required />
+          </div>
+          <div>
+            <label class="label">Type</label>
+            <select id="type" class="input" required>
+              <option value="stock">Stock</option>
+              <option value="mutual_fund">Mutual Fund</option>
+              <option value="crypto">Crypto</option>
+            </select>
+          </div>
+          <div>
+            <label class="label">Quantity</label>
+            <input id="quantity" type="number" step="any" min="0" class="input" required />
+          </div>
+          <div>
+            <label class="label">Buy Price</label>
+            <input id="buyPrice" type="number" step="any" min="0" class="input" required />
+          </div>
+          <button type="submit" class="btn">Save</button>
+          <button type="button" id="reset-form" class="btn ghost">Reset</button>
+        </form>
+        <p id="form-error" class="err"></p>
+      </section>
+
+      <!-- Table -->
+      <section class="bg-white rounded-2xl shadow p-4">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="text-lg font-semibold">Your Assets</h2>
+          <button id="refresh" class="btn-sm">Refresh Prices</button>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="min-w-full text-sm">
+            <thead>
+              <tr class="text-left border-b">
+                <th class="py-2 pr-4">Symbol</th>
+                <th class="py-2 pr-4">Type</th>
+                <th class="py-2 pr-4">Qty</th>
+                <th class="py-2 pr-4">Buy Price</th>
+                <th class="py-2 pr-4">Current Price</th>
+                <th class="py-2 pr-4">Invested</th>
+                <th class="py-2 pr-4">Current Value</th>
+                <th class="py-2 pr-4">P/L</th>
+                <th class="py-2 pr-4">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="asset-rows"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Allocation Chart -->
+      <section class="bg-white rounded-2xl shadow p-4">
+        <h2 class="text-lg font-semibold mb-3">Allocation</h2>
+        <canvas id="allocChart" height="120"></canvas>
+      </section>
+    </main>
+
+    <script src="/main.js"></script>
+  </body>
+</html>

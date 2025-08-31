@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Portfolio Tracker – Login / Register</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body class="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+    <div class="w-full max-w-md bg-white rounded-2xl shadow-xl p-6">
+      <h1 class="text-2xl font-bold mb-4 text-center">Portfolio Tracker</h1>
+      <div class="flex gap-2 mb-6" role="tablist">
+        <button id="tab-login" class="tab-btn active">Login</button>
+        <button id="tab-register" class="tab-btn">Register</button>
+      </div>
+
+      <form id="login-form" class="space-y-4">
+        <div>
+          <label class="label">Email</label>
+          <input type="email" id="login-email" class="input" required />
+        </div>
+        <div>
+          <label class="label">Password</label>
+          <input type="password" id="login-password" class="input" required />
+        </div>
+        <button type="submit" class="btn w-full">Login</button>
+        <p id="login-error" class="err"></p>
+      </form>
+
+      <form id="register-form" class="space-y-4 hidden">
+        <div>
+          <label class="label">Email</label>
+          <input type="email" id="register-email" class="input" required />
+        </div>
+        <div>
+          <label class="label">Password</label>
+          <input
+            type="password"
+            id="register-password"
+            class="input"
+            minlength="6"
+            required
+          />
+        </div>
+        <button type="submit" class="btn w-full">Create Account</button>
+        <p id="register-error" class="err"></p>
+      </form>
+    </div>
+
+    <script>
+      const loginEmail = document.getElementById("login-email");
+      const loginPassword = document.getElementById("login-password");
+      const registerEmail = document.getElementById("register-email");
+      const registerPassword = document.getElementById("register-password");
+      const loginTab = document.getElementById("tab-login");
+      const registerTab = document.getElementById("tab-register");
+      const loginForm = document.getElementById("login-form");
+      const registerForm = document.getElementById("register-form");
+
+      function activate(tab) {
+        if (tab === "login") {
+          loginForm.classList.remove("hidden");
+          registerForm.classList.add("hidden");
+          loginTab.classList.add("active");
+          registerTab.classList.remove("active");
+        } else {
+          loginForm.classList.add("hidden");
+          registerForm.classList.remove("hidden");
+          loginTab.classList.remove("active");
+          registerTab.classList.add("active");
+        }
+      }
+      loginTab.onclick = () => activate("login");
+      registerTab.onclick = () => activate("register");
+
+      const API = "/api";
+
+      loginForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        document.getElementById("login-error").textContent = "";
+        try {
+          const res = await fetch(`${API}/auth/login`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              email: loginEmail.value,
+              password: loginPassword.value,
+            }),
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || "Login failed");
+          localStorage.setItem("token", data.token);
+          localStorage.setItem("user", JSON.stringify(data.user));
+          window.location.href = "/dashboard.html";
+        } catch (err) {
+          document.getElementById("login-error").textContent = err.message;
+        }
+      });
+
+      registerForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        document.getElementById("register-error").textContent = "";
+        try {
+          const res = await fetch(`${API}/auth/register`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              email: registerEmail.value,
+              password: registerPassword.value,
+            }),
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || "Registration failed");
+          localStorage.setItem("token", data.token);
+          localStorage.setItem("user", JSON.stringify(data.user));
+          window.location.href = "/dashboard.html";
+        } catch (err) {
+          document.getElementById("register-error").textContent = err.message;
+        }
+      });
+    </script>
+  </body>
+</html>

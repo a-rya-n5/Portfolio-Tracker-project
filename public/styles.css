@@ -1,0 +1,16 @@
+/* public/styles.css */
+
+/* Tiny utility since we use Tailwind CDN */
+/* If your build tool doesn't support @apply from CDN, replace with plain CSS: */
+.tab-btn { display:flex; align-items:center; justify-content:center; padding:0.5rem; border-radius:0.75rem; border:1px solid #e5e7eb; font-size:0.875rem; }
+.tab-btn.active { background:#4f46e5; color:#fff; border-color:#4f46e5; }
+.label { display:block; font-size:0.875rem; color:#6b7280; margin-bottom:0.25rem; }
+.input { width:100%; border-radius:0.75rem; border:1px solid #e5e7eb; padding:0.5rem 0.75rem; }
+.input:focus { outline:none; box-shadow:0 0 0 2px rgba(79,70,229,0.35); }
+.btn { display:inline-flex; align-items:center; justify-content:center; padding:0.5rem 1rem; border-radius:0.75rem; color:white; background:#4f46e5; transition:background .2s; }
+.btn:hover { background:#4338ca; }
+.btn.ghost { background:white; color:#374151; border:1px solid #e5e7eb; }
+.btn-sm { padding:0.25rem 0.75rem; border-radius:0.5rem; border:1px solid #e5e7eb; }
+.btn-sm.danger { color:#dc2626; border-color:#fecaca; }
+.card { background:white; border-radius:1rem; box-shadow:0 1px 2px rgba(0,0,0,0.05), 0 8px 24px rgba(0,0,0,0.06); padding:1rem; }
+.metric { font-weight:600; font-size:1.5rem; }
