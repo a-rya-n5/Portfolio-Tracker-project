@@ -52,10 +52,7 @@ input[type=number]::-webkit-outer-spin-button {
   margin: 0;
 }
 
-/* Remove in Firefox */
-input[type=number] {
-  -moz-appearance: textfield;
-}
+/*Dark mode for firefox removed due to problems arising regarding some properties*/
 
 /* Dark mode number input fix */
 .dark input[type=number] {
