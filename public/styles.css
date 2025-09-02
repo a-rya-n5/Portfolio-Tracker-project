@@ -16,6 +16,60 @@
   --color-border: var(--color-border-dark);
 }
 
+/* Table row hover fix */
+.dark tr:hover {
+  background-color: rgba(255, 255, 255, 0.05) !important; /* soft gray highlight */
+}
+
+/* Dropdown (select, inputs, buttons) dark mode fix */
+.dark .input,
+.dark select,
+.dark option,
+.dark .btn-sm,
+.dark .btn,
+.dark .btn.ghost {
+  background-color: #1f2937; /* gray-800 */
+  color: #f9fafb;           /* text white */
+  border-color: #374151;    /* gray-700 */
+}
+
+.dark .input:focus,
+.dark select:focus {
+  border-color: #6366f1; /* indigo-500 */
+  box-shadow: 0 0 0 3px rgba(99,102,241,0.35);
+}
+
+/* Hover states for buttons in dark mode */
+.dark .btn-sm:hover,
+.dark .btn.ghost:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Remove default number input arrows (Chrome, Safari, Edge) */
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Remove in Firefox */
+input[type=number] {
+  -moz-appearance: textfield;
+}
+
+/* Dark mode number input fix */
+.dark input[type=number] {
+  background-color: #1f2937; /* gray-800 */
+  color: #f9fafb;
+  border-color: #374151;
+}
+
+/* Add custom hover/focus for number inputs */
+input[type=number]:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(79,70,229,0.35);
+}
+
 :root, body {
   --color-bg: var(--color-bg-light);
   --color-text: var(--color-text-light);
