@@ -1,12 +1,11 @@
-// routes/portfolio.js
 const express = require("express");
 const { z } = require("zod");
 const auth = require("../middleware/auth");
 const Asset = require("../models/Asset");
 const { enrichAssetsWithPrices, getQuote } = require("../services/prices");
 const axios = require("axios");
+const yahooFinance = require("yahoo-finance2").default;
 
-const AV_KEY = process.env.ALPHA_VANTAGE_KEY;
 const router = express.Router();
 
 // Add asset
@@ -17,17 +16,17 @@ const AddSchema = z.object({
   buyPrice: z.number().nonnegative()
 });
 
-// === Search Route (stocks via Alpha Vantage, crypto via CoinGecko) ===
+// === Search endpoint ===
 router.get("/search", async (req, res) => {
   try {
     const keywords = req.query.q;
-    const type = req.query.type || "stock"; // default = stock
+    const type = req.query.type || "stock"; // default to stock
     if (!keywords) return res.status(400).json({ error: "Missing query" });
 
     let results = [];
 
     if (type === "crypto") {
-      // CoinGecko search
+      // CoinGecko search for crypto
       const url = `https://api.coingecko.com/api/v3/search?query=${encodeURIComponent(
         keywords
       )}`;
@@ -40,16 +39,14 @@ router.get("/search", async (req, res) => {
         currency: (process.env.CURRENCY || "USD").toUpperCase(),
       }));
     } else {
-      // Alpha Vantage SYMBOL_SEARCH
-      if (!AV_KEY) return res.status(500).json({ error: "Missing Alpha Vantage API key" });
-      const url = `https://www.alphavantage.co/query?function=SYMBOL_SEARCH&keywords=${keywords}&apikey=${AV_KEY}`;
-      const response = await axios.get(url);
-      const matches = response.data.bestMatches || [];
+      // Yahoo Finance search for stocks/mutual funds
+      const searchResults = await yahooFinance.search(keywords);
+      const matches = searchResults.quotes || [];
       results = matches.map((m) => ({
-        symbol: m["1. symbol"],
-        name: m["2. name"],
-        region: m["4. region"],
-        currency: m["8. currency"],
+        symbol: m.symbol,
+        name: m.shortname || m.longname || m.symbol,
+        region: m.exchange || "Unknown",
+        currency: m.currency || (process.env.CURRENCY || "USD"),
       }));
     }
 
@@ -59,7 +56,7 @@ router.get("/search", async (req, res) => {
   }
 });
 
-// === Add Asset ===
+// === Add asset ===
 router.post("/add", auth, async (req, res) => {
   try {
     const parsed = AddSchema.parse(req.body);
@@ -74,7 +71,7 @@ router.post("/add", auth, async (req, res) => {
   }
 });
 
-// === Edit Asset ===
+// === Edit asset ===
 const EditSchema = z.object({
   symbol: z.string().min(1).optional(),
   type: z.enum(["stock", "mutual_fund", "crypto"]).optional(),
@@ -101,7 +98,7 @@ router.put("/:id", auth, async (req, res) => {
   }
 });
 
-// === Delete Asset ===
+// === Delete asset ===
 router.delete("/:id", auth, async (req, res) => {
   try {
     const asset = await Asset.findOneAndDelete({
@@ -115,7 +112,7 @@ router.delete("/:id", auth, async (req, res) => {
   }
 });
 
-// === Get Portfolio ===
+// === Get portfolio ===
 router.get("/:userId", auth, async (req, res) => {
   try {
     if (req.params.userId !== req.user.id)

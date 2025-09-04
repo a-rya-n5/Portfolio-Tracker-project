@@ -163,8 +163,7 @@ if (symbolInput) {
 
     searchTimeout = setTimeout(async () => {
       try {
-        // 👇 include the selected type in the request
-        const type = typeSelect ? typeSelect.value : "stock";
+        const type = typeSelect ? typeSelect.value : "stock"; // pass type to backend
         const res = await fetch(
           `/api/portfolio/search?q=${encodeURIComponent(query)}&type=${type}`
         );
@@ -173,7 +172,7 @@ if (symbolInput) {
 
         if (!results || results.length === 0) {
           const li = document.createElement("li");
-          li.className = "px-3 py-2 text-gray-500 italic";
+          li.className = "px-3 py-2 text-gray-500 italic cursor-default";
           li.textContent = "No results found";
           suggestionsList.appendChild(li);
           suggestionsList.classList.remove("hidden");

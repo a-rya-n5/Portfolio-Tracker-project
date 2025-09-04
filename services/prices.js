@@ -1,13 +1,13 @@
 // services/prices.js
-// Fetch live quotes: Alpha Vantage for stocks & mutual funds, CoinGecko for crypto
+// Fetch live quotes: Yahoo Finance for stocks & mutual funds, CoinGecko for crypto
 
 const NodeCache = require("node-cache");
-const cache = new NodeCache(); // no global TTL, we’ll set per-asset
+const yahooFinance = require("yahoo-finance2").default;
+const cache = new NodeCache(); // we'll set per-type TTLs
 
-const AV_KEY = process.env.ALPHA_VANTAGE_KEY;
 const FIAT = (process.env.CURRENCY || "USD").toUpperCase();
 
-// TTLs (seconds)
+// Cache TTLs (seconds)
 const STOCK_TTL = 900;   // 15 minutes
 const CRYPTO_TTL = 60;   // 1 minute
 
@@ -24,25 +24,27 @@ const CRYPTO_MAP = {
 };
 
 // ---- Fetchers ----
-async function fetchAlphaVantageQuote(symbol) {
-  if (!AV_KEY) throw new Error("Missing ALPHA_VANTAGE_KEY");
 
-  const url = new URL("https://www.alphavantage.co/query");
-  url.searchParams.set("function", "GLOBAL_QUOTE");
-  url.searchParams.set("symbol", symbol);
-  url.searchParams.set("apikey", AV_KEY);
+// Yahoo Finance for stocks/mutual funds
+async function fetchYahooQuote(symbol) {
+  try {
+    const quote = await yahooFinance.quote(symbol);
+    if (!quote || !quote.regularMarketPrice) {
+      throw new Error("Price not found from Yahoo Finance");
+    }
 
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`Alpha Vantage error ${res.status}`);
-  const data = await res.json();
-
-  const q = data["Global Quote"] || {};
-  const price = parseFloat(q["05. price"]) || null;
-  if (!price) throw new Error("Price not found from Alpha Vantage");
-
-  return { symbol, price, currency: FIAT, source: "Alpha Vantage" };
+    return {
+      symbol: symbol.toUpperCase(),
+      price: Number(quote.regularMarketPrice),
+      currency: quote.currency || FIAT,
+      source: "Yahoo Finance"
+    };
+  } catch (err) {
+    throw new Error(`Yahoo Finance error: ${err.message}`);
+  }
 }
 
+// CoinGecko for crypto
 async function fetchCoinGeckoPrice(symbol) {
   const id = CRYPTO_MAP[symbol.toUpperCase()];
   if (!id) throw new Error(`Unsupported crypto symbol: ${symbol}`);
@@ -58,10 +60,15 @@ async function fetchCoinGeckoPrice(symbol) {
   const price = data?.[id]?.[FIAT.toLowerCase()];
   if (!price) throw new Error("Price not found from CoinGecko");
 
-  return { symbol: symbol.toUpperCase(), price: Number(price), currency: FIAT, source: "CoinGecko" };
+  return {
+    symbol: symbol.toUpperCase(),
+    price: Number(price),
+    currency: FIAT,
+    source: "CoinGecko"
+  };
 }
 
-// ---- Main quote getter with per-type TTL ----
+// ---- Main quote getter with per-type caching ----
 async function getQuote({ symbol, type }) {
   const key = `${type}:${symbol}`.toUpperCase();
   const cached = cache.get(key);
@@ -72,14 +79,14 @@ async function getQuote({ symbol, type }) {
     result = await fetchCoinGeckoPrice(symbol);
     cache.set(key, result, CRYPTO_TTL);
   } else {
-    result = await fetchAlphaVantageQuote(symbol);
+    result = await fetchYahooQuote(symbol);
     cache.set(key, result, STOCK_TTL);
   }
 
   return result;
 }
 
-// ---- Enrichment for portfolio assets ----
+// ---- Enrich portfolio assets with prices ----
 async function enrichAssetsWithPrices(assets) {
   const results = [];
   for (const a of assets) {
