@@ -145,3 +145,64 @@ function renderAllocation(assets, currency) {
   if (!getToken() || !getUser()) { window.location.href = "/"; return; }
   loadPortfolio().catch(err => alert(err.message));
 })();
+
+// === Symbol Search ===
+const symbolInput = document.getElementById("symbol");
+const typeSelect = document.getElementById("type"); // 👈 grab the asset type dropdown
+const suggestionsList = document.getElementById("symbol-suggestions");
+let searchTimeout;
+
+if (symbolInput) {
+  symbolInput.addEventListener("input", () => {
+    clearTimeout(searchTimeout);
+    const query = symbolInput.value.trim();
+    if (query.length < 2) {
+      suggestionsList.classList.add("hidden");
+      return;
+    }
+
+    searchTimeout = setTimeout(async () => {
+      try {
+        // 👇 include the selected type in the request
+        const type = typeSelect ? typeSelect.value : "stock";
+        const res = await fetch(
+          `/api/portfolio/search?q=${encodeURIComponent(query)}&type=${type}`
+        );
+        const results = await res.json();
+        suggestionsList.innerHTML = "";
+
+        if (!results || results.length === 0) {
+          const li = document.createElement("li");
+          li.className = "px-3 py-2 text-gray-500 italic";
+          li.textContent = "No results found";
+          suggestionsList.appendChild(li);
+          suggestionsList.classList.remove("hidden");
+          return;
+        }
+
+        results.forEach((r) => {
+          const li = document.createElement("li");
+          li.className =
+            "px-3 py-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700";
+          li.textContent = `${r.symbol} — ${r.name} (${r.region}, ${r.currency})`;
+          li.onclick = () => {
+            symbolInput.value = r.symbol;
+            suggestionsList.classList.add("hidden");
+          };
+          suggestionsList.appendChild(li);
+        });
+
+        suggestionsList.classList.remove("hidden");
+      } catch (err) {
+        console.error("Search error", err);
+      }
+    }, 400); // debounce delay
+  });
+
+  // Hide suggestions when clicking outside
+  document.addEventListener("click", (e) => {
+    if (!suggestionsList.contains(e.target) && e.target !== symbolInput) {
+      suggestionsList.classList.add("hidden");
+    }
+  });
+}

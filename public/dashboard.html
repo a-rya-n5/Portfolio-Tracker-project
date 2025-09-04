@@ -47,15 +47,21 @@
           class="grid grid-cols-1 md:grid-cols-6 gap-3 items-end"
         >
           <input type="hidden" id="asset-id" />
-          <div>
+          <div class="relative">
             <label class="label">Symbol</label>
             <input
               id="symbol"
               class="input"
-              placeholder="AAPL, BTC, INFY"
+              placeholder="Type to search..."
               required
+              autocomplete="off"
             />
+            <ul
+              id="symbol-suggestions"
+              class="absolute left-0 right-0 bg-white dark:bg-gray-800 rounded-md shadow-md mt-1 hidden z-50 max-h-48 overflow-y-auto"
+            ></ul>
           </div>
+
           <div>
             <label class="label">Type</label>
             <select id="type" class="input" required>
