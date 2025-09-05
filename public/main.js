@@ -3,7 +3,10 @@ const API = "/api";
 
 function fmt(n, currency = "USD") {
   if (n === null || n === undefined || Number.isNaN(n)) return "—";
-  return new Intl.NumberFormat(undefined, { style: "currency", currency }).format(n);
+  return new Intl.NumberFormat(undefined, {
+    style: "currency",
+    currency,
+  }).format(n);
 }
 
 function pct(n) {
@@ -11,15 +14,31 @@ function pct(n) {
   return `${n.toFixed(2)}%`;
 }
 
-function getToken() { return localStorage.getItem("token"); }
-function getUser() { try { return JSON.parse(localStorage.getItem("user")); } catch { return null; } }
+function getToken() {
+  return localStorage.getItem("token");
+}
+function getUser() {
+  try {
+    return JSON.parse(localStorage.getItem("user"));
+  } catch {
+    return null;
+  }
+}
 
 async function api(path, opts = {}) {
   const res = await fetch(`${API}${path}`, {
     ...opts,
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${getToken()}`, ...(opts.headers || {}) },
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${getToken()}`,
+      ...(opts.headers || {}),
+    },
   });
-  if (res.status === 401) { localStorage.clear(); window.location.href = "/"; return; }
+  if (res.status === 401) {
+    localStorage.clear();
+    window.location.href = "/";
+    return;
+  }
   const data = await res.json();
   if (!res.ok) throw new Error(data.error || "Request failed");
   return data;
@@ -36,11 +55,19 @@ async function loadPortfolio() {
 }
 
 function renderSummary(summary, currency) {
-  document.getElementById("total-invested").textContent = fmt(summary.totalInvested, currency);
-  document.getElementById("current-value").textContent = fmt(summary.totalCurrentValue, currency);
+  document.getElementById("total-invested").textContent = fmt(
+    summary.totalInvested,
+    currency
+  );
+  document.getElementById("current-value").textContent = fmt(
+    summary.totalCurrentValue,
+    currency
+  );
   const sign = summary.netPnL >= 0 ? "+" : "";
   document.getElementById("net-pnl").innerHTML = `
-    <span class="${summary.netPnL >= 0 ? 'text-green-600' : 'text-red-600'} font-semibold">${sign}${fmt(summary.netPnL, currency)}</span>
+    <span class="${
+      summary.netPnL >= 0 ? "text-green-600" : "text-red-600"
+    } font-semibold">${sign}${fmt(summary.netPnL, currency)}</span>
     <span class="text-gray-500">(${pct(summary.netPnLPct)})</span>`;
 }
 
@@ -49,13 +76,27 @@ function tr(a, currency) {
   row.className = "border-b hover:bg-gray-100 dark:hover:bg-gray-700";
   row.innerHTML = `
     <td class="py-2 pr-4 font-semibold">${a.symbol}</td>
-    <td class="py-2 pr-4">${a.type.replace('_',' ')}</td>
+    <td class="py-2 pr-4">${a.type.replace("_", " ")}</td>
     <td class="py-2 pr-4">${a.quantity}</td>
     <td class="py-2 pr-4">${fmt(a.buyPrice, currency)}</td>
-    <td class="py-2 pr-4">${a.currentPrice ? fmt(a.currentPrice, currency) : '<span class="text-gray-400">n/a</span>'}</td>
+    <td class="py-2 pr-4">${
+      a.currentPrice
+        ? fmt(a.currentPrice, currency)
+        : '<span class="text-gray-400">n/a</span>'
+    }</td>
     <td class="py-2 pr-4">${fmt(a.invested, currency)}</td>
-    <td class="py-2 pr-4">${a.currentValue ? fmt(a.currentValue, currency) : '—'}</td>
-    <td class="py-2 pr-4 ${a.pnl >= 0 ? 'text-green-600' : 'text-red-600'}">${a.pnl !== null ? fmt(a.pnl, currency) + ` (${pct(a.pnlPct)})` : '—'}</td>
+    <td class="py-2 pr-4">${
+      a.currentValue ? fmt(a.currentValue, currency) : "—"
+    }</td>
+    <td class="py-2 pr-4 ${
+      a.pnl >= 0 ? "text-green-600" : "text-red-600"
+    } font-semibold">
+    ${
+      a.pnl !== null
+        ? `${a.pnl >= 0 ? "▲" : "▼"} ${fmt(a.pnl, currency)} (${pct(a.pnlPct)})`
+        : "—"
+    }
+    </td>
     <td class="py-2 pr-4 flex gap-2">
       <button data-id="${a._id}" class="btn-sm edit">Edit</button>
       <button data-id="${a._id}" class="btn-sm danger delete">Delete</button>
@@ -66,9 +107,17 @@ function tr(a, currency) {
 function renderTable(assets, currency) {
   const tbody = document.getElementById("asset-rows");
   tbody.innerHTML = "";
-  assets.forEach(a => tbody.appendChild(tr(a, currency)));
-  tbody.querySelectorAll(".delete").forEach(btn => btn.addEventListener("click", onDelete));
-  tbody.querySelectorAll(".edit").forEach(btn => btn.addEventListener("click", () => onEdit(assets.find(x => x._id === btn.dataset.id))));
+  assets.forEach((a) => tbody.appendChild(tr(a, currency)));
+  tbody
+    .querySelectorAll(".delete")
+    .forEach((btn) => btn.addEventListener("click", onDelete));
+  tbody
+    .querySelectorAll(".edit")
+    .forEach((btn) =>
+      btn.addEventListener("click", () =>
+        onEdit(assets.find((x) => x._id === btn.dataset.id))
+      )
+    );
 }
 
 // === Portfolio Filters ===
@@ -108,14 +157,20 @@ form.addEventListener("submit", async (e) => {
     symbol: document.getElementById("symbol").value.trim().toUpperCase(),
     type: document.getElementById("type").value,
     quantity: Number(document.getElementById("quantity").value),
-    buyPrice: Number(document.getElementById("buyPrice").value)
+    buyPrice: Number(document.getElementById("buyPrice").value),
   };
   const id = document.getElementById("asset-id").value;
   try {
     if (id) {
-      await api(`/portfolio/${id}`, { method: "PUT", body: JSON.stringify(payload) });
+      await api(`/portfolio/${id}`, {
+        method: "PUT",
+        body: JSON.stringify(payload),
+      });
     } else {
-      await api("/portfolio/add", { method: "POST", body: JSON.stringify(payload) });
+      await api("/portfolio/add", {
+        method: "POST",
+        body: JSON.stringify(payload),
+      });
     }
     form.reset();
     document.getElementById("asset-id").value = "";
@@ -126,38 +181,52 @@ form.addEventListener("submit", async (e) => {
 });
 
 // Reset form
-document.getElementById("reset-form").addEventListener("click", () => { form.reset(); document.getElementById("asset-id").value = ""; });
+document.getElementById("reset-form").addEventListener("click", () => {
+  form.reset();
+  document.getElementById("asset-id").value = "";
+});
 
 // Refresh prices
 document.getElementById("refresh").addEventListener("click", loadPortfolio);
 
 // Logout
 const logout = document.getElementById("logout");
-logout.addEventListener("click", () => { localStorage.clear(); window.location.href = "/"; });
+logout.addEventListener("click", () => {
+  localStorage.clear();
+  window.location.href = "/";
+});
 
 // Allocation chart
 let allocChart;
 function renderAllocation(assets, currency) {
-  const ctx = document.getElementById('allocChart');
+  const ctx = document.getElementById("allocChart");
   const groups = assets.reduce((acc, a) => {
     const key = a.type;
     acc[key] = (acc[key] || 0) + (a.currentValue || 0);
     return acc;
   }, {});
-  const labels = Object.keys(groups).map(k => k.replace('_',' '));
+  const labels = Object.keys(groups).map((k) => k.replace("_", " "));
   const values = Object.values(groups);
   if (allocChart) allocChart.destroy();
   allocChart = new Chart(ctx, {
-    type: 'doughnut',
+    type: "doughnut",
     data: { labels, datasets: [{ data: values }] },
-    options: { plugins: { legend: { position: 'bottom' }, title: { display: true, text: `Allocation by Type (${currency})` } } }
+    options: {
+      plugins: {
+        legend: { position: "bottom" },
+        title: { display: true, text: `Allocation by Type (${currency})` },
+      },
+    },
   });
 }
 
 // Guard route: redirect to login if no token
 (function init() {
-  if (!getToken() || !getUser()) { window.location.href = "/"; return; }
-  loadPortfolio().catch(err => alert(err.message));
+  if (!getToken() || !getUser()) {
+    window.location.href = "/";
+    return;
+  }
+  loadPortfolio().catch((err) => alert(err.message));
 })();
 
 // === Symbol Search & Commodity Handling ===
@@ -212,7 +281,9 @@ if (symbolInput) {
     searchTimeout = setTimeout(async () => {
       try {
         const type = typeSelect ? typeSelect.value : "stock";
-        const res = await fetch(`/api/portfolio/search?q=${encodeURIComponent(query)}&type=${type}`);
+        const res = await fetch(
+          `/api/portfolio/search?q=${encodeURIComponent(query)}&type=${type}`
+        );
         const results = await res.json();
         suggestionsList.innerHTML = "";
 
@@ -227,7 +298,8 @@ if (symbolInput) {
 
         results.forEach((r) => {
           const li = document.createElement("li");
-          li.className = "px-3 py-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700";
+          li.className =
+            "px-3 py-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700";
           li.textContent = `${r.symbol} — ${r.name} (${r.region}, ${r.currency})`;
           li.onclick = () => {
             symbolInput.value = r.symbol;

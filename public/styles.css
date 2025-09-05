@@ -173,6 +173,22 @@ body {
   box-shadow: 0 4px 12px rgba(0,0,0,0.12), 0 16px 40px rgba(0,0,0,0.16);
 }
 
+/* Card hover glow effect */
+.card {
+  background: var(--color-bg);
+  border-radius: 1rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08), 0 12px 32px rgba(0,0,0,0.12);
+  padding: 1rem;
+  transition: transform 0.3s ease, box-shadow 0.3s ease, border 0.3s ease;
+  border: 1px solid transparent;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 16px rgba(14, 223, 234, 0.926), 0 16px 40px rgba(7, 209, 240, 0.918);
+  border: 1px solid var(--color-primary);
+}
+
 .metric {
   font-weight: 600;
   font-size: 1.5rem;
@@ -194,4 +210,24 @@ tr:hover {
 .dark tr:hover {
   background-color: rgba(255, 255, 255, 0.05) !important; /* soft gray for dark theme */
   color: inherit !important;
+}
+/* Smooth table row hover highlight */
+tr {
+  transition: background-color 0.25s ease, color 0.25s ease;
+}
+
+tr:hover {
+  background-color: rgba(79, 70, 229, 0.08); /* subtle indigo tint */
+}
+
+/* Subtle arrow animation */
+@keyframes pnlPulse {
+  0% { transform: translateY(0); opacity: 0.8; }
+  50% { transform: translateY(-2px); opacity: 1; }
+  100% { transform: translateY(0); opacity: 0.8; }
+}
+
+.text-green-600, .text-red-600 {
+  display: inline-block;
+  animation: pnlPulse 1.5s ease-in-out infinite;
 }
