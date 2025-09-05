@@ -45,7 +45,7 @@ function renderSummary(summary, currency) {
 
 function tr(a, currency) {
   const row = document.createElement("tr");
-  row.className = "border-b hover:bg-gray-50";
+  row.className = "border-b hover:bg-gray-50 dark:hover:bg-gray-800";
   row.innerHTML = `
     <td class="py-2 pr-4 font-semibold">${a.symbol}</td>
     <td class="py-2 pr-4">${a.type.replace('_',' ')}</td>
@@ -146,15 +146,49 @@ function renderAllocation(assets, currency) {
   loadPortfolio().catch(err => alert(err.message));
 })();
 
-// === Symbol Search ===
+// === Symbol Search & Commodity Handling ===
 const symbolInput = document.getElementById("symbol");
-const typeSelect = document.getElementById("type"); // 👈 grab the asset type dropdown
+const typeSelect = document.getElementById("type");
 const suggestionsList = document.getElementById("symbol-suggestions");
+
+// 👇 commodity dropdown wrapper + select
+const commodityWrapper = document.getElementById("commodity-select-wrapper");
+const commoditySelect = document.getElementById("commodity");
+
 let searchTimeout;
 
+// Show/hide commodity dropdown
+if (typeSelect) {
+  typeSelect.addEventListener("change", () => {
+    if (typeSelect.value === "commodity") {
+      commodityWrapper?.classList.remove("hidden");
+      symbolInput.disabled = true;
+      symbolInput.value = commoditySelect ? commoditySelect.value : "";
+      suggestionsList.classList.add("hidden");
+    } else {
+      commodityWrapper?.classList.add("hidden");
+      symbolInput.disabled = false;
+      symbolInput.value = "";
+    }
+  });
+
+  if (commoditySelect) {
+    commoditySelect.addEventListener("change", () => {
+      symbolInput.value = commoditySelect.value;
+    });
+  }
+}
+
+// === Symbol Search (only for non-commodities) ===
 if (symbolInput) {
   symbolInput.addEventListener("input", () => {
     clearTimeout(searchTimeout);
+
+    if (typeSelect && typeSelect.value === "commodity") {
+      suggestionsList.classList.add("hidden");
+      return;
+    }
+
     const query = symbolInput.value.trim();
     if (query.length < 2) {
       suggestionsList.classList.add("hidden");
@@ -163,10 +197,8 @@ if (symbolInput) {
 
     searchTimeout = setTimeout(async () => {
       try {
-        const type = typeSelect ? typeSelect.value : "stock"; // pass type to backend
-        const res = await fetch(
-          `/api/portfolio/search?q=${encodeURIComponent(query)}&type=${type}`
-        );
+        const type = typeSelect ? typeSelect.value : "stock";
+        const res = await fetch(`/api/portfolio/search?q=${encodeURIComponent(query)}&type=${type}`);
         const results = await res.json();
         suggestionsList.innerHTML = "";
 
@@ -181,8 +213,7 @@ if (symbolInput) {
 
         results.forEach((r) => {
           const li = document.createElement("li");
-          li.className =
-            "px-3 py-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700";
+          li.className = "px-3 py-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700";
           li.textContent = `${r.symbol} — ${r.name} (${r.region}, ${r.currency})`;
           li.onclick = () => {
             symbolInput.value = r.symbol;
@@ -195,10 +226,9 @@ if (symbolInput) {
       } catch (err) {
         console.error("Search error", err);
       }
-    }, 400); // debounce delay
+    }, 400);
   });
 
-  // Hide suggestions when clicking outside
   document.addEventListener("click", (e) => {
     if (!suggestionsList.contains(e.target) && e.target !== symbolInput) {
       suggestionsList.classList.add("hidden");

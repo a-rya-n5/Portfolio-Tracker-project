@@ -11,7 +11,7 @@ const router = express.Router();
 // Add asset
 const AddSchema = z.object({
   symbol: z.string().min(1),
-  type: z.enum(["stock", "mutual_fund", "crypto"]),
+  type: z.enum(["stock", "mutual_fund", "crypto", "commodity"]),
   quantity: z.number().positive(),
   buyPrice: z.number().nonnegative()
 });
@@ -26,7 +26,7 @@ router.get("/search", async (req, res) => {
     let results = [];
 
     if (type === "crypto") {
-      // CoinGecko search for crypto
+      // 🔹 CoinGecko search for crypto
       const url = `https://api.coingecko.com/api/v3/search?query=${encodeURIComponent(
         keywords
       )}`;
@@ -38,14 +38,24 @@ router.get("/search", async (req, res) => {
         region: "Crypto",
         currency: (process.env.CURRENCY || "USD").toUpperCase(),
       }));
-    } else {
-      // Yahoo Finance search for stocks/mutual funds
+    } else if (type === "commodity") {
+      // 🔹 Yahoo Finance search for commodities/futures
       const searchResults = await yahooFinance.search(keywords);
       const matches = searchResults.quotes || [];
       results = matches.map((m) => ({
         symbol: m.symbol,
         name: m.shortname || m.longname || m.symbol,
-        region: m.exchange || "Unknown",
+        region: m.exchange || "Commodities",
+        currency: m.currency || (process.env.CURRENCY || "USD"),
+      }));
+    } else {
+      // 🔹 Yahoo Finance search for stocks / mutual funds
+      const searchResults = await yahooFinance.search(keywords);
+      const matches = searchResults.quotes || [];
+      results = matches.map((m) => ({
+        symbol: m.symbol,
+        name: m.shortname || m.longname || m.symbol,
+        region: m.exchange || "Stocks",
         currency: m.currency || (process.env.CURRENCY || "USD"),
       }));
     }
@@ -74,7 +84,7 @@ router.post("/add", auth, async (req, res) => {
 // === Edit asset ===
 const EditSchema = z.object({
   symbol: z.string().min(1).optional(),
-  type: z.enum(["stock", "mutual_fund", "crypto"]).optional(),
+  type: z.enum(["stock", "mutual_fund", "crypto","commodity"]).optional(),
   quantity: z.number().positive().optional(),
   buyPrice: z.number().nonnegative().optional()
 });
