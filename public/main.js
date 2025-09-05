@@ -45,7 +45,7 @@ function renderSummary(summary, currency) {
 
 function tr(a, currency) {
   const row = document.createElement("tr");
-  row.className = "border-b hover:bg-gray-50 dark:hover:bg-gray-800";
+  row.className = "border-b hover:bg-gray-100 dark:hover:bg-gray-700";
   row.innerHTML = `
     <td class="py-2 pr-4 font-semibold">${a.symbol}</td>
     <td class="py-2 pr-4">${a.type.replace('_',' ')}</td>

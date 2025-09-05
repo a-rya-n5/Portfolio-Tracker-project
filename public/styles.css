@@ -183,3 +183,15 @@ body {
   from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+/* Table row hover fix for light mode */
+tr:hover {
+  background-color: rgba(0, 0, 0, 0.05) !important; /* soft gray for light theme */
+  color: inherit !important;
+}
+
+/* Table row hover fix for dark mode */
+.dark tr:hover {
+  background-color: rgba(255, 255, 255, 0.05) !important; /* soft gray for dark theme */
+  color: inherit !important;
+}
