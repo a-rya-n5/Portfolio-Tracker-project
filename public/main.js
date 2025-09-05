@@ -31,6 +31,7 @@ async function loadPortfolio() {
   const data = await api(`/portfolio/${user.id}`);
   renderSummary(data.summary, data.currency);
   renderTable(data.assets, data.currency);
+  applyFilters(data.assets, data.currency);
   renderAllocation(data.assets, data.currency);
 }
 
@@ -68,6 +69,19 @@ function renderTable(assets, currency) {
   assets.forEach(a => tbody.appendChild(tr(a, currency)));
   tbody.querySelectorAll(".delete").forEach(btn => btn.addEventListener("click", onDelete));
   tbody.querySelectorAll(".edit").forEach(btn => btn.addEventListener("click", () => onEdit(assets.find(x => x._id === btn.dataset.id))));
+}
+
+// === Portfolio Filters ===
+function applyFilters(assets, currency) {
+  const filterButtons = document.querySelectorAll(".filter-btn");
+  filterButtons.forEach((btn) => {
+    btn.onclick = () => {
+      const type = btn.dataset.type;
+      const filtered =
+        type === "all" ? assets : assets.filter((a) => a.type === type);
+      renderTable(filtered, currency);
+    };
+  });
 }
 
 async function onDelete(e) {
