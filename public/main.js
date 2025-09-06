@@ -74,6 +74,7 @@ function renderSummary(summary, currency) {
 function tr(a, currency) {
   const row = document.createElement("tr");
   row.className = "border-b hover:bg-gray-100 dark:hover:bg-gray-700";
+
   row.innerHTML = `
     <td class="py-2 pr-4 font-semibold">${a.symbol}</td>
     <td class="py-2 pr-4">${a.type.replace("_", " ")}</td>
@@ -91,16 +92,19 @@ function tr(a, currency) {
     <td class="py-2 pr-4 ${
       a.pnl >= 0 ? "text-green-600" : "text-red-600"
     } font-semibold">
-    ${
-      a.pnl !== null
-        ? `${a.pnl >= 0 ? "▲" : "▼"} ${fmt(a.pnl, currency)} (${pct(a.pnlPct)})`
-        : "—"
-    }
+      ${
+        a.pnl !== null
+          ? `${a.pnl >= 0 ? "▲" : "▼"} ${fmt(a.pnl, currency)} (${pct(a.pnlPct)})`
+          : "—"
+      }
     </td>
-    <td class="py-2 pr-4 flex gap-2">
-      <button data-id="${a._id}" class="btn-sm edit">Edit</button>
-      <button data-id="${a._id}" class="btn-sm danger delete">Delete</button>
-    </td>`;
+    <td class="py-2 pr-4 actions-cell">
+      <div class="actions-wrap inline-flex gap-2">
+        <button data-id="${a._id}" class="btn-sm edit">Edit</button>
+        <button data-id="${a._id}" class="btn-sm danger delete">Delete</button>
+      </div>
+    </td>
+  `;
   return row;
 }
 

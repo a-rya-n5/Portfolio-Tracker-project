@@ -110,6 +110,55 @@ body {
   border-color: var(--color-primary);
 }
 
+/* --- Actions column: keep buttons on one line --- */
+/* Apply to header and body last column (fallback) and explicit actions-cell */
+table.min-w-full th:last-child,
+#asset-rows td.actions-cell,
+#asset-rows td:last-child {
+  white-space: nowrap;        /* prevent wrapping */
+  min-width: 150px;          /* ensure enough space; adjust as needed */
+  width: 1%;                 /* allow table to allocate minimal width but keep min-width */
+  text-align: right;
+}
+
+/* inline-flex wrapper for action buttons */
+#asset-rows .actions-wrap {
+  display: inline-flex;
+  gap: 0.5rem;
+  align-items: center;
+  justify-content: flex-end;
+  white-space: nowrap;
+}
+
+/* Make small buttons actually small */
+#asset-rows .btn-sm {
+  display: inline-flex;
+  padding: 0.28rem 0.6rem; /* tighter padding */
+  font-size: 0.78rem;
+  line-height: 1;
+  min-width: 0;
+}
+
+/* Danger button: keep red outline but not overly wide */
+#asset-rows .btn-sm.danger {
+  border-color: #fecaca;
+  color: #dc2626;
+}
+
+/* Responsive: on narrow screens make buttons a tiny stacked layout if absolutely necessary */
+@media (max-width: 640px) {
+  #asset-rows td.actions-cell {
+    min-width: 110px;
+  }
+  #asset-rows .actions-wrap {
+    gap: 0.35rem;
+  }
+  #asset-rows .btn-sm {
+    padding: 0.2rem 0.45rem;
+    font-size: 0.72rem;
+  }
+}
+
 .label {
   display: block;
   font-size: 0.875rem;
@@ -230,4 +279,10 @@ tr:hover {
 .text-green-600, .text-red-600 {
   display: inline-block;
   animation: pnlPulse 1.5s ease-in-out infinite;
+}
+
+/* Keep action buttons side by side */
+td.actions {
+  white-space: nowrap;
+  min-width: 120px; /* adjust if needed */
 }
