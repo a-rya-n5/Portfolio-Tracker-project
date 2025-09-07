@@ -139,7 +139,18 @@
           </button>
         </div>
         <div class="overflow-x-auto">
-          <table class="min-w-full text-sm">
+          <table class="min-w-full text-sm table-fixed">
+            <colgroup>
+              <col />
+              <col />
+              <col />
+              <col />
+              <col />
+              <col />
+              <col />
+              <col />
+              <col style="width: 220px" /> <!-- fixed width for actions -->
+            </colgroup>
             <thead>
               <tr class="text-left border-b">
                 <th class="py-2 pr-4">Symbol</th>
@@ -150,7 +161,7 @@
                 <th class="py-2 pr-4">Invested</th>
                 <th class="py-2 pr-4">Current Value</th>
                 <th class="py-2 pr-4">P/L</th>
-                <th class="py-2 pr-4">Actions</th>
+                <th class="py-2 pr-4 text-right">Actions</th>
               </tr>
             </thead>
             <tbody id="asset-rows"></tbody>

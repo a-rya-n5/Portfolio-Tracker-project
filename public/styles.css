@@ -280,9 +280,3 @@ tr:hover {
   display: inline-block;
   animation: pnlPulse 1.5s ease-in-out infinite;
 }
-
-/* Keep action buttons side by side */
-td.actions {
-  white-space: nowrap;
-  min-width: 120px; /* adjust if needed */
-}

@@ -98,10 +98,12 @@ function tr(a, currency) {
           : "—"
       }
     </td>
-    <td class="py-2 pr-4 flex flex-wrap gap-2">
-      <button data-id="${a._id}" class="btn-sm edit">Edit</button>
-      <button data-id="${a._id}" class="btn-sm danger delete">Delete</button>
-      <button data-symbol="${a.symbol}" class="btn-sm chart">History</button>
+    <td class="py-2 pr-4">
+      <div class="flex justify-end items-center gap-2 whitespace-nowrap min-w-[220px]">
+        <button data-id="${a._id}" class="btn-sm edit">Edit</button>
+        <button data-id="${a._id}" class="btn-sm danger delete">Delete</button>
+        <button data-id="${a._id}" data-symbol="${a.symbol}" class="btn-sm history">History</button>
+      </div>
     </td>`;
   return row;
 }
