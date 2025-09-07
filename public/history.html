@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Asset History</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body class="p-6">
+  <div class="card max-w-4xl mx-auto">
+    <h1 id="chart-title" class="text-xl font-bold mb-4">Asset History</h1>
+    
+    <!-- Dropdown for range -->
+    <div class="mb-4 flex gap-4">
+      <label>
+        Range:
+        <select id="range" class="input w-auto">
+          <option value="1mo">1M</option>
+          <option value="3mo">3M</option>
+          <option value="6mo" selected>6M</option>
+          <option value="1y">1Y</option>
+          <option value="5y">5Y</option>
+        </select>
+      </label>
+      <label>
+        Interval:
+        <select id="interval" class="input w-auto">
+          <option value="1d" selected>1 Day</option>
+          <option value="1wk">1 Week</option>
+          <option value="1mo">1 Month</option>
+        </select>
+      </label>
+    </div>
+
+    <canvas id="historyChart" height="100"></canvas>
+
+    <div class="mt-6">
+      <button id="back" class="btn">← Back to Dashboard</button>
+    </div>
+  </div>
+
+  <script src="history.js"></script>
+</body>
+</html>

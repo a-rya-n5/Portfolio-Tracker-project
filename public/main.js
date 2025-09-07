@@ -98,13 +98,11 @@ function tr(a, currency) {
           : "—"
       }
     </td>
-    <td class="py-2 pr-4 actions-cell">
-      <div class="actions-wrap inline-flex gap-2">
-        <button data-id="${a._id}" class="btn-sm edit">Edit</button>
-        <button data-id="${a._id}" class="btn-sm danger delete">Delete</button>
-      </div>
-    </td>
-  `;
+    <td class="py-2 pr-4 flex flex-wrap gap-2">
+      <button data-id="${a._id}" class="btn-sm edit">Edit</button>
+      <button data-id="${a._id}" class="btn-sm danger delete">Delete</button>
+      <button data-symbol="${a.symbol}" class="btn-sm chart">History</button>
+    </td>`;
   return row;
 }
 
@@ -122,6 +120,11 @@ function renderTable(assets, currency) {
         onEdit(assets.find((x) => x._id === btn.dataset.id))
       )
     );
+  tbody.querySelectorAll(".chart").forEach((btn) =>
+    btn.addEventListener("click", () => {
+      window.location.href = `history.html?symbol=${btn.dataset.symbol}`;
+    })
+  );
 }
 
 // === Portfolio Filters ===

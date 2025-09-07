@@ -38,26 +38,23 @@ router.get("/search", async (req, res) => {
         region: "Crypto",
         currency: (process.env.CURRENCY || "USD").toUpperCase(),
       }));
-    } else if (type === "commodity") {
-      // 🔹 Yahoo Finance search for commodities/futures
-      const searchResults = await yahooFinance.search(keywords);
-      const matches = searchResults.quotes || [];
-      results = matches.map((m) => ({
-        symbol: m.symbol,
-        name: m.shortname || m.longname || m.symbol,
-        region: m.exchange || "Commodities",
-        currency: m.currency || (process.env.CURRENCY || "USD"),
-      }));
     } else {
-      // 🔹 Yahoo Finance search for stocks / mutual funds
-      const searchResults = await yahooFinance.search(keywords);
+      // 🔹 Yahoo Finance search for stocks / mutual funds / commodities
+      const searchResults = await yahooFinance.search(keywords).catch(() => ({ quotes: [] }));
       const matches = searchResults.quotes || [];
-      results = matches.map((m) => ({
-        symbol: m.symbol,
-        name: m.shortname || m.longname || m.symbol,
-        region: m.exchange || "Stocks",
-        currency: m.currency || (process.env.CURRENCY || "USD"),
-      }));
+      const seen = new Set();
+      results = matches
+        .filter((m) => {
+          if (!m.symbol || seen.has(m.symbol)) return false;
+          seen.add(m.symbol);
+          return true;
+        })
+        .map((m) => ({
+          symbol: m.symbol,
+          name: m.shortname || m.longname || m.symbol,
+          region: m.quoteType || m.exchange || "Unknown",
+          currency: m.currency || (process.env.CURRENCY || "USD"),
+        }));
     }
 
     res.json(results);
@@ -84,7 +81,7 @@ router.post("/add", auth, async (req, res) => {
 // === Edit asset ===
 const EditSchema = z.object({
   symbol: z.string().min(1).optional(),
-  type: z.enum(["stock", "mutual_fund", "crypto","commodity"]).optional(),
+  type: z.enum(["stock", "mutual_fund", "crypto", "commodity"]).optional(),
   quantity: z.number().positive().optional(),
   buyPrice: z.number().nonnegative().optional()
 });
@@ -168,6 +165,104 @@ router.get("/quote/:type/:symbol", auth, async (req, res) => {
     res.json(quote);
   } catch (err) {
     res.status(500).json({ error: err.message || "Failed to fetch quote" });
+  }
+});
+
+// === History endpoint (robust) ===
+router.get("/history/:symbol", auth, async (req, res) => {
+  try {
+    const { symbol } = req.params;
+    let range = (req.query.range || "6mo").toString();
+    let interval = (req.query.interval || "1d").toString();
+
+    // Allowed sets
+    const VALID_RANGES = new Set(["1mo", "3mo", "6mo", "1y", "5y", "max"]);
+    const VALID_INTERVALS = new Set(["1d", "1wk", "1mo"]);
+
+    // Normalize invalid values
+    if (!VALID_RANGES.has(range)) range = "6mo";
+    if (!VALID_INTERVALS.has(interval)) interval = "1d";
+
+    // helper: compute period1/period2 dates for fallback
+    function computePeriod(rangeKey) {
+      const end = new Date();
+      let start = new Date(end);
+      switch (rangeKey) {
+        case "1mo": start.setMonth(end.getMonth() - 1); break;
+        case "3mo": start.setMonth(end.getMonth() - 3); break;
+        case "6mo": start.setMonth(end.getMonth() - 6); break;
+        case "1y":  start.setFullYear(end.getFullYear() - 1); break;
+        case "5y":  start.setFullYear(end.getFullYear() - 5); break;
+        case "max": start = new Date(2000, 0, 1); break;
+        default:    start.setMonth(end.getMonth() - 6);
+      }
+      return { period1: start, period2: end };
+    }
+
+    // try chart(range, interval) first
+    let result;
+    let usedRange = range;
+    let usedInterval = interval;
+    let quotes = [];
+
+    try {
+      result = await yahooFinance.chart(symbol, { range, interval });
+    } catch (errChart) {
+      // fallback: compute period1/period2 and retry
+      const { period1, period2 } = computePeriod(range);
+      result = await yahooFinance.chart(symbol, { period1, period2, interval });
+      // set usedRange to the computed actual dates for frontend clarity
+      usedRange = undefined; // not using range shorthand now
+      usedInterval = interval;
+    }
+
+    // Parse result into a consistent quotes array
+    if (result && Array.isArray(result.quotes) && result.quotes.length) {
+      quotes = result.quotes;
+    } else if (result && result.chart && Array.isArray(result.chart.result) && result.chart.result[0]) {
+      // low-level chart result shape -> build quotes
+      const r0 = result.chart.result[0];
+      const timestamps = r0.timestamp || [];
+      const quoteIndicators = (r0.indicators && r0.indicators.quote && r0.indicators.quote[0]) || {};
+      const opens = quoteIndicators.open || [];
+      const closes = quoteIndicators.close || [];
+      const highs = quoteIndicators.high || [];
+      const lows = quoteIndicators.low || [];
+      const volumes = quoteIndicators.volume || [];
+
+      quotes = timestamps.map((ts, i) => ({
+        date: new Date(ts * 1000),
+        open: opens[i] ?? null,
+        close: closes[i] ?? null,
+        high: highs[i] ?? null,
+        low: lows[i] ?? null,
+        volume: volumes[i] ?? null
+      }));
+    } else {
+      // no data
+      return res.status(404).json({ error: "No historical data found", range: usedRange, interval: usedInterval, history: [] });
+    }
+
+    // Normalize quotes into history records
+    const history = quotes
+      .filter(q => q && (q.close !== undefined && q.close !== null || q.price !== undefined)) // ensure meaningful entries
+      .map(q => ({
+        date: q.date instanceof Date ? q.date : new Date(q.date),
+        open: q.open ?? null,
+        close: (q.close ?? q.price) ?? null,
+        high: q.high ?? null,
+        low: q.low ?? null,
+        volume: q.volume ?? null
+      }));
+
+    res.json({
+      range: usedRange,
+      interval: usedInterval,
+      history
+    });
+  } catch (err) {
+    console.error("History fetch error:", err && err.stack ? err.stack : err);
+    res.status(500).json({ error: err.message || "Failed to fetch history" });
   }
 });
 
