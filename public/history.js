@@ -80,9 +80,9 @@ async function loadHistory() {
 document.getElementById("range").addEventListener("change", loadHistory);
 document.getElementById("interval").addEventListener("change", loadHistory);
 
-// Back button
+// Back button - FIX: Changed from index.html to dashboard.html
 document.getElementById("back").addEventListener("click", () => {
-  window.location.href = "index.html"; // 👈 back to dashboard
+  window.location.href = "dashboard.html"; // 👈 changed to dashboard.html
 });
 
 // Initial load

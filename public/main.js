@@ -102,7 +102,7 @@ function tr(a, currency) {
       <div class="flex justify-end items-center gap-2 whitespace-nowrap min-w-[220px]">
         <button data-id="${a._id}" class="btn-sm edit">Edit</button>
         <button data-id="${a._id}" class="btn-sm danger delete">Delete</button>
-        <button data-id="${a._id}" data-symbol="${a.symbol}" class="btn-sm history">History</button>
+        <button data-symbol="${a.symbol}" class="btn-sm history">History</button>
       </div>
     </td>`;
   return row;
@@ -112,6 +112,8 @@ function renderTable(assets, currency) {
   const tbody = document.getElementById("asset-rows");
   tbody.innerHTML = "";
   assets.forEach((a) => tbody.appendChild(tr(a, currency)));
+  
+  // Attach event listeners
   tbody
     .querySelectorAll(".delete")
     .forEach((btn) => btn.addEventListener("click", onDelete));
@@ -122,7 +124,9 @@ function renderTable(assets, currency) {
         onEdit(assets.find((x) => x._id === btn.dataset.id))
       )
     );
-  tbody.querySelectorAll(".chart").forEach((btn) =>
+  
+  // FIX: Changed from .chart to .history
+  tbody.querySelectorAll(".history").forEach((btn) =>
     btn.addEventListener("click", () => {
       window.location.href = `history.html?symbol=${btn.dataset.symbol}`;
     })
